@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/saentis/bringthebroetli/BringTheBrotli/BringTheBrotli.csproj": {}
+    "/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/BringTheBrotli.csproj": {}
   },
   "projects": {
-    "/home/saentis/bringthebroetli/BringTheBrotli/BringTheBrotli.csproj": {
+    "/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/BringTheBrotli.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/saentis/bringthebroetli/BringTheBrotli/BringTheBrotli.csproj",
+        "projectUniqueName": "/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/BringTheBrotli.csproj",
         "projectName": "BringTheBrotli",
-        "projectPath": "/home/saentis/bringthebroetli/BringTheBrotli/BringTheBrotli.csproj",
+        "projectPath": "/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/BringTheBrotli.csproj",
         "packagesPath": "/home/saentis/.nuget/packages/",
-        "outputPath": "/home/saentis/bringthebroetli/BringTheBrotli/obj/",
+        "outputPath": "/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/saentis/.nuget/NuGet/NuGet.Config"

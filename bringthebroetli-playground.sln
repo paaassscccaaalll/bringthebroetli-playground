@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BringTheBrotli", "BringTheBrotli\BringTheBrotli.csproj", "{D9C305B0-655A-2EB7-7565-AEC84393705F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BringTheBrotliDemo", "Run_demo\BringTheBrotliDemo.csproj", "{A3F1E2D4-B6C7-4891-A0DC-EF1234567890}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D9C305B0-655A-2EB7-7565-AEC84393705F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9C305B0-655A-2EB7-7565-AEC84393705F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9C305B0-655A-2EB7-7565-AEC84393705F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9C305B0-655A-2EB7-7565-AEC84393705F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3F1E2D4-B6C7-4891-A0DC-EF1234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3F1E2D4-B6C7-4891-A0DC-EF1234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3F1E2D4-B6C7-4891-A0DC-EF1234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3F1E2D4-B6C7-4891-A0DC-EF1234567890}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6A6105ED-F359-4C5E-B54E-C5231B051430}
+	EndGlobalSection
+EndGlobal

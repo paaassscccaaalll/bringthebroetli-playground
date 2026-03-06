@@ -4,21 +4,21 @@
   <Platform>DesktopGL</Platform>
   <Config />
   <SourceFiles>
-    <File>/home/saentis/bringthebroetli/BringTheBrotli/Content/DefaultFont.spritefont</File>
-    <File>/home/saentis/bringthebroetli/BringTheBrotli/Content/Textures/train_engine.png</File>
-    <File>/home/saentis/bringthebroetli/BringTheBrotli/Content/Textures/train_tender.png</File>
-    <File>/home/saentis/bringthebroetli/BringTheBrotli/Content/Textures/train_boiler_car.png</File>
-    <File>/home/saentis/bringthebroetli/BringTheBrotli/Content/Textures/train_passenger_car.png</File>
-    <File>/home/saentis/bringthebroetli/BringTheBrotli/Content/Textures/player1.png</File>
-    <File>/home/saentis/bringthebroetli/BringTheBrotli/Content/Textures/player2.png</File>
-    <File>/home/saentis/bringthebroetli/BringTheBrotli/Content/Textures/background_hills.png</File>
-    <File>/home/saentis/bringthebroetli/BringTheBrotli/Content/Textures/background_midground.png</File>
-    <File>/home/saentis/bringthebroetli/BringTheBrotli/Content/Textures/track_tile.png</File>
-    <File>/home/saentis/bringthebroetli/BringTheBrotli/Content/Textures/task_station_spritesheet.png</File>
-    <File>/home/saentis/bringthebroetli/BringTheBrotli/Content/Textures/particle_smoke.png</File>
-    <File>/home/saentis/bringthebroetli/BringTheBrotli/Content/Textures/particle_steam.png</File>
-    <File>/home/saentis/bringthebroetli/BringTheBrotli/Content/Textures/ui_gauge_frame.png</File>
-    <File>/home/saentis/bringthebroetli/BringTheBrotli/Content/Textures/hud_panel.png</File>
+    <File>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/DefaultFont.spritefont</File>
+    <File>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/train_engine.png</File>
+    <File>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/train_tender.png</File>
+    <File>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/train_boiler_car.png</File>
+    <File>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/train_passenger_car.png</File>
+    <File>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/player1.png</File>
+    <File>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/player2.png</File>
+    <File>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/background_hills.png</File>
+    <File>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/background_midground.png</File>
+    <File>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/track_tile.png</File>
+    <File>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/task_station_spritesheet.png</File>
+    <File>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/particle_smoke.png</File>
+    <File>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/particle_steam.png</File>
+    <File>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/ui_gauge_frame.png</File>
+    <File>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/hud_panel.png</File>
   </SourceFiles>
   <DestFiles>
     <File xsi:nil="true" />

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PipelineBuildEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <SourceFile>/home/saentis/bringthebroetli/BringTheBrotli/Content/Textures/particle_smoke.png</SourceFile>
-  <SourceTime>2026-03-01T21:42:22.2169322+01:00</SourceTime>
-  <DestFile>/home/saentis/bringthebroetli/BringTheBrotli/Content/bin/DesktopGL/Content/Textures/particle_smoke.xnb</DestFile>
-  <DestTime>2026-03-01T21:48:54.6419977+01:00</DestTime>
+  <SourceFile>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/particle_smoke.png</SourceFile>
+  <SourceTime>2026-03-03T16:20:33.5608215+01:00</SourceTime>
+  <DestFile>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/bin/DesktopGL/Content/Textures/particle_smoke.xnb</DestFile>
+  <DestTime>2026-03-03T17:42:02.3640881+01:00</DestTime>
   <Importer>TextureImporter</Importer>
   <ImporterTime>2025-10-20T16:25:32+02:00</ImporterTime>
   <Processor>TextureProcessor</Processor>

@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>BringTheBrotliDemo</RootNamespace>
+    <AssemblyName>BringTheBrotliDemo</AssemblyName>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <!-- MonoGame DesktopGL (works on Windows / macOS / Linux) -->
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL"     Version="3.8.1.303" />
+    <PackageReference Include="MonoGame.Content.Builder.Task"    Version="3.8.1.303" />
+  </ItemGroup>
+
+  <!--
+    System.Text.Json is included in net6+ by default.
+    Add explicitly only if you target an older TFM.
+  -->
+
+  <!-- Wire the MGCB content pipeline -->
+  <ItemGroup>
+    <MonoGameContentReference Include="Content\Content.mgcb" />
+  </ItemGroup>
+
+  <!--
+    Copy Baker_Spritesheet.json as a plain file (not MGCB-processed).
+    Game1.cs reads it directly with System.IO / System.Text.Json.
+    The target path mirrors where MGCB puts compiled assets.
+  -->
+  <ItemGroup>
+    <Content Include="Content\Baker_Spritesheet.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>Content\Baker_Spritesheet.json</TargetPath>
+    </Content>
+  </ItemGroup>
+
+</Project>
