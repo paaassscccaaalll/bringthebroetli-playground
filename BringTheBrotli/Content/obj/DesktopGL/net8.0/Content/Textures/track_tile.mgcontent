@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PipelineBuildEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<<<<<<< HEAD
   <SourceFile>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/Textures/track_tile.png</SourceFile>
   <SourceTime>2026-03-03T16:20:33.5608215+01:00</SourceTime>
   <DestFile>/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/Content/bin/DesktopGL/Content/Textures/track_tile.xnb</DestFile>
   <DestTime>2026-03-03T17:42:02.3640881+01:00</DestTime>
+=======
+  <SourceFile>/home/saentis/bringthebroetli-playground/BringTheBrotli/Content/Textures/track_tile.png</SourceFile>
+  <SourceTime>2026-03-01T21:42:22.2169322+01:00</SourceTime>
+  <DestFile>/home/saentis/bringthebroetli-playground/BringTheBrotli/Content/bin/DesktopGL/Content/Textures/track_tile.xnb</DestFile>
+  <DestTime>2026-03-02T16:51:39.8895006+01:00</DestTime>
+>>>>>>> 641349c (before pull)
   <Importer>TextureImporter</Importer>
   <ImporterTime>2025-10-20T16:25:32+02:00</ImporterTime>
   <Processor>TextureProcessor</Processor>

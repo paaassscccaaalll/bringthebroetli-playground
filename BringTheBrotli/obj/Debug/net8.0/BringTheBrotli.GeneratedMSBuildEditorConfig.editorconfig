@@ -8,6 +8,10 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = BringTheBrotli
+<<<<<<< HEAD
 build_property.ProjectDir = /home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/
+=======
+build_property.ProjectDir = /home/saentis/bringthebroetli-playground/BringTheBrotli/
+>>>>>>> 641349c (before pull)
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 

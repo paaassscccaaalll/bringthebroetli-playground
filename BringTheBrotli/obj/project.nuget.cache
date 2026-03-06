@@ -1,8 +1,14 @@
 {
   "version": 2,
+<<<<<<< HEAD
   "dgSpecHash": "AZGja0HC+GY3fQxdauD5xkz+b0xKKqwCbBmO7GQBIjThi0SzNGmx9TjoCh2EwO9hMRKbEOmtvA6jLGjtrOvmlw==",
   "success": true,
   "projectFilePath": "/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/BringTheBrotli.csproj",
+=======
+  "dgSpecHash": "HLxmNGiRMX634Tev0430NdgN4NgRoLZFcZhQ9xBjjuTQzVimuaVdrIKkwsZnlLkI4R7gXzumglxnijOFHLp10g==",
+  "success": true,
+  "projectFilePath": "/home/saentis/bringthebroetli-playground/BringTheBrotli/BringTheBrotli.csproj",
+>>>>>>> 641349c (before pull)
   "expectedPackageFiles": [
     "/home/saentis/.nuget/packages/monogame.content.builder.task/3.8.1.303/monogame.content.builder.task.3.8.1.303.nupkg.sha512",
     "/home/saentis/.nuget/packages/monogame.framework.desktopgl/3.8.1.303/monogame.framework.desktopgl.3.8.1.303.nupkg.sha512"

@@ -107,11 +107,19 @@
   "project": {
     "version": "1.0.0",
     "restore": {
+<<<<<<< HEAD
       "projectUniqueName": "/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/BringTheBrotli.csproj",
       "projectName": "BringTheBrotli",
       "projectPath": "/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/BringTheBrotli.csproj",
       "packagesPath": "/home/saentis/.nuget/packages/",
       "outputPath": "/home/saentis/BringTheBroetli/bringthebroetli-playground/BringTheBrotli/obj/",
+=======
+      "projectUniqueName": "/home/saentis/bringthebroetli-playground/BringTheBrotli/BringTheBrotli.csproj",
+      "projectName": "BringTheBrotli",
+      "projectPath": "/home/saentis/bringthebroetli-playground/BringTheBrotli/BringTheBrotli.csproj",
+      "packagesPath": "/home/saentis/.nuget/packages/",
+      "outputPath": "/home/saentis/bringthebroetli-playground/BringTheBrotli/obj/",
+>>>>>>> 641349c (before pull)
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/saentis/.nuget/NuGet/NuGet.Config"
