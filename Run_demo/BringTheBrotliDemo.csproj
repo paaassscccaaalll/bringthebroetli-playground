@@ -31,9 +31,21 @@
     The target path mirrors where MGCB puts compiled assets.
   -->
   <ItemGroup>
-    <Content Include="Content\Baker_Spritesheet.json">
+    <Content Include="Content\Baker_Walk_Spritesheet.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>Content\Baker_Spritesheet.json</TargetPath>
+      <TargetPath>Content\Baker_Walk_Spritesheet.json</TargetPath>
+    </Content>
+    <Content Include="Content\Baker_Jump_Spritesheet.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>Content\Baker_Jump_Spritesheet.json</TargetPath>
+    </Content>
+    <Content Include="Content\locomotive_bounds.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>Content\locomotive_bounds.json</TargetPath>
+    </Content>
+    <Content Include="Content\baker_bounds.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>Content\baker_bounds.json</TargetPath>
     </Content>
   </ItemGroup>
 

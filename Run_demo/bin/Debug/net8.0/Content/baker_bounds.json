@@ -1,0 +1,14 @@
+{
+  "frameWidth": 512,
+  "frameHeight": 512,
+  "footAnchor": {
+    "x": 254,
+    "y": 495
+  },
+  "collisionBox": {
+    "x": 154,
+    "y": 125,
+    "width": 198,
+    "height": 381
+  }
+}

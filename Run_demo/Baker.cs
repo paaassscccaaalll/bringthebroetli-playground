@@ -1,18 +1,17 @@
+using System;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace BringTheBrotliDemo
 {
+    public enum JumpState { Grounded, Rising, Falling, Landing }
+
     /// <summary>
-    /// Represents the playable Baker character.
-    ///
-    /// Responsibilities
-    /// ────────────────
-    ///  • Read WASD keyboard input and compute a movement vector.
-    ///  • Move the Baker's world position at a fixed speed.
-    ///  • Delegate animation state changes to AnimationController.
-    ///  • Draw the correct sprite-sheet frame, centered on the screen.
+    /// Represents the playable Baker character with full jump physics.
     /// </summary>
     public class Baker
     {
@@ -20,47 +19,67 @@ namespace BringTheBrotliDemo
         // Constants
         // ---------------------------------------------------------------
 
-        /// <summary>Movement speed in world-units per second.</summary>
-        public const float MoveSpeed = 200f;
+        public const float WalkSpeed = 2.5f * 60f;   // ~150 px/s
+        public const float RunSpeed  = 5.5f * 60f;   // ~330 px/s
 
-        /// <summary>
-        /// Y-axis compression factor matching the 2.5D camera tilt (45°).
-        /// Applied to the floor; the Baker position moves at full speed in
-        /// world space but the floor scrolls with this compression.
-        /// </summary>
-        public const float IsoYScale = 0.5f;
+        public const float WalkAnimFps = 8f;
+        public const float RunAnimFps  = 14f;
+
+        public const float DrawScale = 0.2f;
+
+        // Jump physics constants
+        public const float JumpVelocity = -10f;  // negative = upward
+        public const float Gravity      = 0.35f;
+        public const float MaxFallSpeed = 12f;
+
+        // Landing animation duration
+        private const float LandingDuration = 0.15f;
 
         // ---------------------------------------------------------------
         // Fields
         // ---------------------------------------------------------------
 
-        /// <summary>World-space position of the Baker's centre.</summary>
+        /// <summary>Screen-space position of the Baker's foot anchor.</summary>
         public Vector2 Position;
 
-        private readonly AnimationController _anim;
-        private readonly Texture2D           _spriteSheet;
+        public bool IsRunning { get; private set; }
 
-        // Screen dimensions — used so the Baker is always centred.
-        private readonly int _screenWidth;
-        private readonly int _screenHeight;
+        public string? CurrentZoneLabel { get; private set; }
+
+        /// <summary>Current jump state.</summary>
+        public JumpState JumpState { get; private set; } = JumpState.Grounded;
+
+        /// <summary>Current visual jump height (positive = higher).</summary>
+        public float CurrentJumpHeight { get; private set; }
+
+        /// <summary>Predicted landing foot-anchor position.</summary>
+        public Vector2 PredictedLanding { get; private set; }
+
+        private readonly AnimationController _anim;
+
+        // Foot anchor within a single frame (pixel coords in the walk frame).
+        private Vector2 _footAnchor;
+
+        // Jump physics state
+        private float _verticalVelocity;
+        private Vector2 _jumpMomentum;  // captured horizontal velocity at jump start
+        private float _landingTimer;
+
+        // For detecting key press (not hold)
+        private bool _spaceWasDown;
 
         // ---------------------------------------------------------------
         // Constructor
         // ---------------------------------------------------------------
 
-        /// <param name="spriteSheet">The loaded Baker spritesheet texture.</param>
-        /// <param name="anim">Pre-constructed AnimationController for this Baker.</param>
-        /// <param name="screenWidth">Viewport width in pixels.</param>
-        /// <param name="screenHeight">Viewport height in pixels.</param>
-        public Baker(Texture2D spriteSheet, AnimationController anim,
-                     int screenWidth, int screenHeight)
+        public Baker(AnimationController anim, int screenWidth, int screenHeight)
         {
-            _spriteSheet  = spriteSheet;
-            _anim         = anim;
-            _screenWidth  = screenWidth;
-            _screenHeight = screenHeight;
+            _anim = anim;
 
-            // Start the Baker in the centre of the (conceptual) world.
+            LoadBakerBounds(
+                "Content/baker_bounds.json",
+                anim.WalkFrameWidth, anim.WalkFrameHeight);
+
             Position = Vector2.Zero;
         }
 
@@ -68,83 +87,243 @@ namespace BringTheBrotliDemo
         // Public properties
         // ---------------------------------------------------------------
 
-        /// <summary>Expose the controller so Game1 can inspect debug info.</summary>
         public AnimationController Animation => _anim;
 
         // ---------------------------------------------------------------
         // Update
         // ---------------------------------------------------------------
 
-        /// <summary>
-        /// Process input, move the Baker, and advance the animation.
-        /// Call once per game tick from Game1.Update.
-        /// </summary>
-        public void Update(GameTime gameTime, KeyboardState kb)
+        public void Update(GameTime gameTime, KeyboardState kb, CollisionSystem collision)
         {
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            // ---- Build raw movement vector from WASD -----------------
+            // ---- Walk / run ------------------------------------------
+            IsRunning = kb.IsKeyDown(Keys.LeftShift) || kb.IsKeyDown(Keys.RightShift);
+            float speed = IsRunning ? RunSpeed : WalkSpeed;
+            _anim.TargetFps = IsRunning ? RunAnimFps : WalkAnimFps;
+
+            // ---- Build movement vector from WASD --------------------
             Vector2 rawDir = Vector2.Zero;
+            if (kb.IsKeyDown(Keys.A)) rawDir.X -= 1f;
+            if (kb.IsKeyDown(Keys.D)) rawDir.X += 1f;
+            if (kb.IsKeyDown(Keys.W)) rawDir.Y -= 1f;
+            if (kb.IsKeyDown(Keys.S)) rawDir.Y += 1f;
 
-            if (kb.IsKeyDown(Keys.W)) rawDir.Y -= 1f;  // up-screen = north
-            if (kb.IsKeyDown(Keys.S)) rawDir.Y += 1f;  // down
-            if (kb.IsKeyDown(Keys.A)) rawDir.X -= 1f;  // left = west
-            if (kb.IsKeyDown(Keys.D)) rawDir.X += 1f;  // right = east
-
-            // Normalise diagonals so speed is consistent in all directions.
             if (rawDir != Vector2.Zero)
                 rawDir = Vector2.Normalize(rawDir);
 
-            // ---- Move the world position -----------------------------
-            Position += rawDir * MoveSpeed * dt;
+            // ---- Jump state machine ---------------------------------
+            bool spaceDown = kb.IsKeyDown(Keys.Space);
+            bool spacePressed = spaceDown && !_spaceWasDown;
+            _spaceWasDown = spaceDown;
 
-            // ---- Update animation state ------------------------------
-            _anim.Update(gameTime, rawDir);
+            switch (JumpState)
+            {
+                case JumpState.Grounded:
+                {
+                    // Normal ground movement
+                    Vector2 desired = Position + rawDir * speed * dt;
+                    Position = collision.ResolveMovement(Position, desired);
+
+                    // Try to jump
+                    if (spacePressed)
+                    {
+                        Vector2 momentum = rawDir * speed;
+                        Vector2 landingPos = PredictLandingPosition(Position, momentum);
+
+                        if (collision.IsLandingValid(landingPos))
+                        {
+                            JumpState = JumpState.Rising;
+                            _verticalVelocity = JumpVelocity;
+                            CurrentJumpHeight = 0f;
+                            _jumpMomentum = momentum;
+                            PredictedLanding = landingPos;
+                            _anim.SetAnimation(AnimationType.Jump);
+                        }
+                    }
+
+                    // Animation
+                    _anim.Update(gameTime, rawDir);
+                    break;
+                }
+
+                case JumpState.Rising:
+                {
+                    // Apply gravity
+                    _verticalVelocity += Gravity;
+                    CurrentJumpHeight -= _verticalVelocity;  // negative vel = go up
+
+                    // Horizontal: use captured momentum, no air control
+                    Vector2 desired = Position + _jumpMomentum * dt;
+                    Position = collision.ResolveMovementAirborne(Position, desired);
+
+                    // Transition to falling
+                    if (_verticalVelocity >= 0f)
+                    {
+                        JumpState = JumpState.Falling;
+                    }
+
+                    // Jump animation: Rising = frames 0-2
+                    float risingProgress = Math.Clamp(
+                        1f - (CurrentJumpHeight / GetPeakHeight()), 0f, 1f);
+                    int frame = (int)(risingProgress * 2.99f);  // 0, 1, 2
+                    _anim.SetFrame(frame);
+
+                    // Keep facing direction from momentum
+                    if (_jumpMomentum != Vector2.Zero)
+                        _anim.Update(gameTime, Vector2.Normalize(_jumpMomentum));
+                    else
+                        _anim.Update(gameTime, Vector2.Zero);
+                    break;
+                }
+
+                case JumpState.Falling:
+                {
+                    // Apply gravity
+                    _verticalVelocity += Gravity;
+                    if (_verticalVelocity > MaxFallSpeed)
+                        _verticalVelocity = MaxFallSpeed;
+
+                    CurrentJumpHeight -= _verticalVelocity;
+
+                    // Horizontal: use captured momentum
+                    Vector2 desired = Position + _jumpMomentum * dt;
+                    Position = collision.ResolveMovementAirborne(Position, desired);
+
+                    // Land when height reaches/passes 0
+                    if (CurrentJumpHeight <= 0f)
+                    {
+                        CurrentJumpHeight = 0f;
+                        JumpState = JumpState.Landing;
+                        _landingTimer = LandingDuration;
+                        _anim.SetFrame(5);  // last jump frame = landing
+                    }
+                    else
+                    {
+                        // Falling animation: frames 3-4
+                        float fallProgress = Math.Clamp(
+                            CurrentJumpHeight / GetPeakHeight(), 0f, 1f);
+                        int frame = 3 + (int)((1f - fallProgress) * 1.99f); // 3 or 4
+                        _anim.SetFrame(frame);
+                    }
+
+                    if (_jumpMomentum != Vector2.Zero)
+                        _anim.Update(gameTime, Vector2.Normalize(_jumpMomentum));
+                    else
+                        _anim.Update(gameTime, Vector2.Zero);
+                    break;
+                }
+
+                case JumpState.Landing:
+                {
+                    _landingTimer -= dt;
+                    if (_landingTimer <= 0f)
+                    {
+                        JumpState = JumpState.Grounded;
+                        _anim.SetAnimation(AnimationType.Walk);
+                    }
+
+                    // No movement during landing
+                    _anim.SetFrame(5);
+                    _anim.Update(gameTime, Vector2.Zero);
+                    break;
+                }
+            }
+
+            // ---- Detect action zone ---------------------------------
+            CurrentZoneLabel = collision.GetActiveZone(Position);
+        }
+
+        // ---------------------------------------------------------------
+        // Jump helpers
+        // ---------------------------------------------------------------
+
+        /// <summary>
+        /// Calculate peak height of the jump arc (for animation mapping).
+        /// Peak = v² / (2g)
+        /// </summary>
+        private static float GetPeakHeight()
+        {
+            return (JumpVelocity * JumpVelocity) / (2f * Gravity);
+        }
+
+        /// <summary>
+        /// Predict where the foot anchor will be when the jump arc returns
+        /// to ground level (jumpHeight = 0).
+        /// </summary>
+        public static Vector2 PredictLandingPosition(Vector2 startPos, Vector2 momentum)
+        {
+            // Total airtime: 2 * |JumpVelocity| / Gravity
+            float airtime = 2f * Math.Abs(JumpVelocity) / Gravity;
+            // Horizontal displacement during airtime
+            // momentum is in px/s, airtime is in "physics frames"
+            // Each frame is ~1/60s, so convert: time in seconds = airtime / 60
+            float airtimeSeconds = airtime / 60f;
+            return startPos + momentum * airtimeSeconds;
         }
 
         // ---------------------------------------------------------------
         // Draw
         // ---------------------------------------------------------------
 
-        /// <summary>
-        /// Draw the Baker centred on the screen.
-        ///
-        /// The Baker's world position scrolls the background but the
-        /// character sprite always sits at the screen centre — this gives
-        /// the classic 2D RPG feel without a separate camera class.
-        /// </summary>
         public void Draw(SpriteBatch spriteBatch)
         {
             Rectangle src = _anim.GetSourceRect();
 
-            // The character is drawn centred on screen.
-            // Place the sprite so its bottom-centre aligns with the screen
-            // centre (feet on the ground line) for a natural 2.5D look.
-            Vector2 screenCentre = new Vector2(
-                _screenWidth  / 2f,
-                _screenHeight / 2f
-            );
-
-            // Origin at bottom-centre of the frame.
-            Vector2 origin = new Vector2(src.Width / 2f, src.Height);
-
-            // Slight vertical offset so the feet sit on the ground line.
-            Vector2 drawPos = new Vector2(
-                screenCentre.X,
-                screenCentre.Y + src.Height * 0.15f   // nudge down a bit
-            );
+            // During a jump, offset the sprite upward by currentJumpHeight
+            Vector2 drawPos = Position;
+            drawPos.Y -= CurrentJumpHeight;
 
             spriteBatch.Draw(
-                texture:           _spriteSheet,
+                texture:           _anim.ActiveTexture,
                 position:          drawPos,
                 sourceRectangle:   src,
                 color:             Color.White,
                 rotation:          0f,
-                origin:            origin,
-                scale:             1f,
+                origin:            _footAnchor,
+                scale:             DrawScale,
                 effects:           SpriteEffects.None,
                 layerDepth:        0f
             );
+        }
+
+        // ---------------------------------------------------------------
+        // JSON loading
+        // ---------------------------------------------------------------
+
+        private void LoadBakerBounds(string relativePath, int frameW, int frameH)
+        {
+            string basePath = AppDomain.CurrentDomain.BaseDirectory;
+            string fullPath = Path.Combine(basePath, relativePath);
+
+            if (!File.Exists(fullPath))
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"[Baker] baker_bounds.json not found, using defaults.");
+                _footAnchor = new Vector2(frameW / 2f, frameH);
+                return;
+            }
+
+            string json = File.ReadAllText(fullPath);
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var data    = JsonSerializer.Deserialize<BakerBoundsData>(json, options);
+
+            _footAnchor = new Vector2(data.FootAnchor.X, data.FootAnchor.Y);
+        }
+
+        // ---------------------------------------------------------------
+        // DTO for JSON
+        // ---------------------------------------------------------------
+
+        private struct PointData
+        {
+            [JsonPropertyName("x")] public int X { get; set; }
+            [JsonPropertyName("y")] public int Y { get; set; }
+        }
+
+        private struct BakerBoundsData
+        {
+            [JsonPropertyName("footAnchor")] public PointData FootAnchor { get; set; }
         }
     }
 }

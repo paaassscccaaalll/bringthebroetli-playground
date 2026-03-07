@@ -14,10 +14,9 @@
 #---------------------------------- Content ---------------------------------#
 
 #
-# Baker_Spritesheet.png
-# ─────────────────────
-# Import the spritesheet as a standard 2-D texture.
-# Premultiply alpha is enabled so transparent pixels blend correctly.
+# Baker_Walk_Spritesheet.png
+# ──────────────────────────
+# Walk animation spritesheet (8 angles × 12 frames).
 #
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -28,7 +27,50 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Baker_Spritesheet.png
+/build:Baker_Walk_Spritesheet.png
+
+#
+# Baker_Jump_Spritesheet.png
+# ──────────────────────────
+# Jump animation spritesheet (8 angles × 6 frames).
+#
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Baker_Jump_Spritesheet.png
+
+#
+# locomotive.png
+# ──────────────
+# The train sprite rendered from Blender (static, side-view).
+#
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:locomotive.png
+
+#
+# DefaultFont.spritefont
+# ──────────────────────
+# SpriteFont for tooltip / UI text rendering.
+#
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:DefaultFont.spritefont
 
 # Baker_Spritesheet.json is NOT processed by MGCB.
 # It is copied to the output Content/ folder via the .csproj <Content> item below.

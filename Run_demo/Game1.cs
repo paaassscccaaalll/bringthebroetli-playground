@@ -12,10 +12,10 @@ namespace BringTheBrotliDemo
     ///
     /// Responsibilities
     /// ────────────────
-    ///  • Set up the window (1280 × 720).
-    ///  • Load the spritesheet texture and JSON metadata.
-    ///  • Create the Baker and AnimationController.
-    ///  • Run the standard Update/Draw loop.
+    ///  • Set up the window (1920 × 1080).
+    ///  • Load the spritesheet, train, and collision system.
+    ///  • Run Update / Draw loop.
+    ///  • Render action-zone tooltip above Baker.
     /// </summary>
     public class Game1 : Game
     {
@@ -25,18 +25,6 @@ namespace BringTheBrotliDemo
 
         private const int ScreenWidth  = 1920;
         private const int ScreenHeight = 1080;
-
-        // ---- 2.5D isometric floor settings ----
-        // Tile footprint in world-space (square), then projected with a
-        // Y-compression of 0.5 to simulate a ~45° downward camera tilt.
-        private const int   WorldTileSize  = 64;          // square world tile
-        private const float IsoYScale      = 0.5f;        // Y compression for 45° tilt
-        private const int   TileScreenW    = WorldTileSize;                     // 64 px wide
-        private const int   TileScreenH    = (int)(WorldTileSize * IsoYScale);  // 32 px tall
-
-        // Colours for the two-tone floor.
-        private static readonly Color FloorColourA = new Color(72, 100, 72);   // muted green
-        private static readonly Color FloorColourB = new Color(60,  86, 60);   // darker green
 
         // ---------------------------------------------------------------
         // MonoGame infrastructure
@@ -49,8 +37,17 @@ namespace BringTheBrotliDemo
         // Game objects
         // ---------------------------------------------------------------
 
-        private Baker       _baker      = null!;
-        private Texture2D   _floorTex   = null!;   // 1x1 solid colour used as tiled floor
+        private Baker           _baker     = null!;
+        private Train           _train     = null!;
+        private CollisionSystem _collision = null!;
+        private SpriteFont      _font      = null!;
+
+        // Tooltip rendering.
+        private Texture2D _pixel = null!;   // 1×1 white texture for drawing rects
+
+        // Debug overlay
+        private bool _debugMode = false;
+        private bool _f1WasDown = false;
 
         // ---------------------------------------------------------------
         // Constructor
@@ -88,30 +85,57 @@ namespace BringTheBrotliDemo
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // ---- Load spritesheet metadata (JSON) --------------------
-            // The JSON file is deployed to the Content folder as a plain
-            // file (no MGCB processing — see Content.mgcb comments).
-            SpritesheetMeta meta = LoadMetadata("Content/Baker_Spritesheet.json");
+            // 1×1 white pixel for rectangle drawing.
+            _pixel = new Texture2D(GraphicsDevice, 1, 1);
+            _pixel.SetData(new[] { Color.White });
 
-            // ---- Load spritesheet texture ----------------------------
-            // Loaded via the standard content pipeline (Baker_Spritesheet.png
-            // must be listed in Content.mgcb with Importer=TextureImporter).
-            Texture2D sheet = Content.Load<Texture2D>("Baker_Spritesheet");
+            // ---- Load font (for tooltip text) -------------------------
+            _font = Content.Load<SpriteFont>("DefaultFont");
 
-            // ---- Build AnimationController ---------------------------
+            // ---- Load walk spritesheet metadata + texture -------------
+            SpritesheetMeta walkMeta = LoadMetadata("Content/Baker_Walk_Spritesheet.json");
+            Texture2D walkSheet = Content.Load<Texture2D>("Baker_Walk_Spritesheet");
+
+            // ---- Load jump spritesheet metadata + texture -------------
+            SpritesheetMeta jumpMeta = LoadMetadata("Content/Baker_Jump_Spritesheet.json");
+            Texture2D jumpSheet = Content.Load<Texture2D>("Baker_Jump_Spritesheet");
+
             var animCtrl = new AnimationController(
-                frameWidth:     meta.FrameWidth,
-                frameHeight:    meta.FrameHeight,
-                framesPerAngle: meta.FramesPerAngle,
-                totalAngles:    meta.TotalAngles
+                walkTexture: walkSheet,
+                walkFrameW: walkMeta.FrameWidth,
+                walkFrameH: walkMeta.FrameHeight,
+                walkFramesPerAngle: walkMeta.FramesPerAngle,
+                jumpTexture: jumpSheet,
+                jumpFrameW: jumpMeta.FrameWidth,
+                jumpFrameH: jumpMeta.FrameHeight,
+                jumpFramesPerAngle: jumpMeta.FramesPerAngle
             );
 
             // ---- Create Baker ----------------------------------------
-            _baker = new Baker(sheet, animCtrl, ScreenWidth, ScreenHeight);
+            _baker = new Baker(animCtrl, ScreenWidth, ScreenHeight);
 
-            // ---- Create a solid 1x1 texture for the floor ------------
-            _floorTex = new Texture2D(GraphicsDevice, 1, 1);
-            _floorTex.SetData(new[] { Color.White });
+            // ---- Load Train ------------------------------------------
+            _train = new Train();
+            _train.LoadContent(Content, ScreenWidth, ScreenHeight);
+
+            // ---- Create and populate CollisionSystem -----------------
+            _collision = new CollisionSystem();
+            _train.PopulateCollision(_collision);
+
+            // ---- Place Baker at "spawn" anchor, or polygon centroid --
+            Vector2? spawn = _train.GetAnchorPoint("spawn");
+            if (spawn.HasValue)
+            {
+                _baker.Position = spawn.Value;
+            }
+            else if (_train.SurfaceBoundary.Length > 0)
+            {
+                Vector2 centroid = Vector2.Zero;
+                foreach (var p in _train.SurfaceBoundary)
+                    centroid += p;
+                centroid /= _train.SurfaceBoundary.Length;
+                _baker.Position = centroid;
+            }
         }
 
         // ---------------------------------------------------------------
@@ -120,12 +144,17 @@ namespace BringTheBrotliDemo
 
         protected override void Update(GameTime gameTime)
         {
-            // Allow Alt+F4 / Back button to quit.
             KeyboardState kb = Keyboard.GetState();
             if (kb.IsKeyDown(Keys.Escape))
                 Exit();
 
-            _baker.Update(gameTime, kb);
+            // Toggle debug overlay with F1
+            bool f1Down = kb.IsKeyDown(Keys.F1);
+            if (f1Down && !_f1WasDown)
+                _debugMode = !_debugMode;
+            _f1WasDown = f1Down;
+
+            _baker.Update(gameTime, kb, _collision);
 
             base.Update(gameTime);
         }
@@ -136,22 +165,28 @@ namespace BringTheBrotliDemo
 
         protected override void Draw(GameTime gameTime)
         {
-            // Clear to a dark sky / background colour.
             GraphicsDevice.Clear(new Color(40, 40, 50));
 
             _spriteBatch.Begin(
-                sortMode:        SpriteSortMode.Deferred,
-                blendState:      BlendState.AlphaBlend,
-                samplerState:    SamplerState.PointClamp,       // crisp pixel art
+                sortMode:          SpriteSortMode.Deferred,
+                blendState:        BlendState.AlphaBlend,
+                samplerState:      SamplerState.PointClamp,
                 depthStencilState: null,
                 rasterizerState:   null
             );
 
-            // ---- Draw scrolling tiled floor --------------------------
-            DrawFloor();
+            // Layer 1: Train
+            _train.Draw(_spriteBatch);
 
-            // ---- Draw Baker character --------------------------------
+            // Layer 2: Baker
             _baker.Draw(_spriteBatch);
+
+            // Layer 3: Tooltip (if Baker is in an action zone)
+            DrawTooltip(_spriteBatch);
+
+            // Layer 4: Debug overlay (F1 toggle)
+            if (_debugMode)
+                DrawDebugOverlay(_spriteBatch);
 
             _spriteBatch.End();
 
@@ -159,91 +194,154 @@ namespace BringTheBrotliDemo
         }
 
         // ---------------------------------------------------------------
+        // Tooltip rendering
+        // ---------------------------------------------------------------
+
+        private void DrawTooltip(SpriteBatch sb)
+        {
+            string? label = _baker.CurrentZoneLabel;
+            if (label == null)
+                return;
+
+            // Measure text.
+            Vector2 textSize = _font.MeasureString(label);
+            int padX = 8, padY = 4;
+
+            // Position tooltip above the Baker's head.
+            float tooltipX = _baker.Position.X - textSize.X / 2f - padX;
+            float tooltipY = _baker.Position.Y - 90f;  // above sprite
+
+            // Background rectangle.
+            Rectangle bg = new Rectangle(
+                (int)tooltipX, (int)tooltipY,
+                (int)textSize.X + padX * 2,
+                (int)textSize.Y + padY * 2);
+
+            sb.Draw(_pixel, bg, new Color(255, 255, 255, 220));
+
+            // Border (draw 4 thin rectangles).
+            Color border = new Color(60, 60, 60);
+            sb.Draw(_pixel, new Rectangle(bg.X, bg.Y, bg.Width, 1), border);
+            sb.Draw(_pixel, new Rectangle(bg.X, bg.Bottom - 1, bg.Width, 1), border);
+            sb.Draw(_pixel, new Rectangle(bg.X, bg.Y, 1, bg.Height), border);
+            sb.Draw(_pixel, new Rectangle(bg.Right - 1, bg.Y, 1, bg.Height), border);
+
+            // Text.
+            sb.DrawString(_font, label,
+                new Vector2(bg.X + padX, bg.Y + padY),
+                new Color(40, 40, 40));
+        }
+
+        // ---------------------------------------------------------------
+        // Debug overlay
+        // ---------------------------------------------------------------
+
+        private void DrawDebugOverlay(SpriteBatch sb)
+        {
+            // ---- 1. Surface boundary (green lines) --------------------
+            var boundary = _collision.SurfaceBoundary;
+            if (boundary.Length >= 3)
+            {
+                for (int i = 0; i < boundary.Length; i++)
+                {
+                    int j = (i + 1) % boundary.Length;
+                    DrawLine(sb, boundary[i], boundary[j], Color.Lime, 1);
+                }
+            }
+
+            // ---- 2. Obstacles (yellow outlines) -----------------------
+            for (int i = 0; i < _collision.Obstacles.Length; i++)
+                DrawRectOutline(sb, _collision.Obstacles[i].Bounds, Color.Yellow, 1);
+
+            // ---- 3. Jump barriers (cyan outlines) ---------------------
+            for (int i = 0; i < _collision.JumpBarriers.Length; i++)
+                DrawRectOutline(sb, _collision.JumpBarriers[i], Color.Cyan, 2);
+
+            // ---- 4. Foot anchor dot (red, 4×4) -----------------------
+            sb.Draw(_pixel,
+                new Rectangle(
+                    (int)_baker.Position.X - 2,
+                    (int)_baker.Position.Y - 2, 4, 4),
+                Color.Red);
+
+            // ---- 5. Predicted landing (magenta, only during jump) -----
+            if (_baker.JumpState == JumpState.Rising ||
+                _baker.JumpState == JumpState.Falling)
+            {
+                Vector2 lp = _baker.PredictedLanding;
+                sb.Draw(_pixel,
+                    new Rectangle((int)lp.X - 3, (int)lp.Y - 3, 6, 6),
+                    Color.Magenta);
+            }
+
+            // ---- 6. Jump shadow (foot anchor on ground during jump) ---
+            if (_baker.JumpState != JumpState.Grounded &&
+                _baker.JumpState != JumpState.Landing)
+            {
+                sb.Draw(_pixel,
+                    new Rectangle(
+                        (int)_baker.Position.X - 8,
+                        (int)_baker.Position.Y - 1, 16, 2),
+                    new Color(0, 0, 0, 100));
+            }
+
+            // ---- 7. JumpState text (top-left) -------------------------
+            string stateText = $"Jump: {_baker.JumpState}  Height: {_baker.CurrentJumpHeight:F1}";
+            sb.DrawString(_font, stateText, new Vector2(10, 10), Color.White);
+        }
+
+        /// <summary>Draw a 1px-wide line between two points.</summary>
+        private void DrawLine(SpriteBatch sb, Vector2 a, Vector2 b, Color color, int thickness)
+        {
+            Vector2 delta = b - a;
+            float length = delta.Length();
+            if (length < 0.5f) return;
+
+            float angle = (float)Math.Atan2(delta.Y, delta.X);
+            sb.Draw(_pixel,
+                a,
+                null,
+                color,
+                angle,
+                Vector2.Zero,
+                new Vector2(length, thickness),
+                SpriteEffects.None,
+                0f);
+        }
+
+        /// <summary>Draw a rectangle outline.</summary>
+        private void DrawRectOutline(SpriteBatch sb, Rectangle rect, Color color, int thickness)
+        {
+            sb.Draw(_pixel, new Rectangle(rect.X, rect.Y, rect.Width, thickness), color);
+            sb.Draw(_pixel, new Rectangle(rect.X, rect.Bottom - thickness, rect.Width, thickness), color);
+            sb.Draw(_pixel, new Rectangle(rect.X, rect.Y, thickness, rect.Height), color);
+            sb.Draw(_pixel, new Rectangle(rect.Right - thickness, rect.Y, thickness, rect.Height), color);
+        }
+
+        // ---------------------------------------------------------------
         // Private helpers
         // ---------------------------------------------------------------
 
-        /// <summary>
-        /// Draws a 2.5D isometric-style checkerboard floor.
-        ///
-        /// Each world tile (64 × 64) is projected as a screen rectangle
-        /// of 64 × 32, simulating a 45° downward camera tilt.  The grid
-        /// scrolls opposite to the Baker's world position so the character
-        /// appears to walk across an infinite plane.
-        /// </summary>
-        private void DrawFloor()
-        {
-            int sw = GraphicsDevice.Viewport.Width;
-            int sh = GraphicsDevice.Viewport.Height;
-
-            // World offset projected into screen space.
-            float offsetX = (-_baker.Position.X) % TileScreenW;
-            float offsetY = (-_baker.Position.Y * IsoYScale) % TileScreenH;
-
-            // Keep offsets negative so the first tile is always off-screen.
-            if (offsetX > 0) offsetX -= TileScreenW;
-            if (offsetY > 0) offsetY -= TileScreenH;
-
-            int tilesX = (sw / TileScreenW) + 3;
-            int tilesY = (sh / TileScreenH) + 3;
-
-            // Compute the world-space tile index of the top-left visible
-            // tile so the checker pattern stays consistent when scrolling.
-            int baseTX = (int)Math.Floor(_baker.Position.X / WorldTileSize);
-            int baseTY = (int)Math.Floor(_baker.Position.Y / WorldTileSize);
-
-            for (int ty = 0; ty < tilesY; ty++)
-            {
-                for (int tx = 0; tx < tilesX; tx++)
-                {
-                    // Checker based on world tile index — not screen tile.
-                    bool checker = ((baseTX + tx) + (baseTY + ty)) % 2 == 0;
-                    Color col = checker ? FloorColourA : FloorColourB;
-
-                    var dest = new Rectangle(
-                        (int)(offsetX + tx * TileScreenW),
-                        (int)(offsetY + ty * TileScreenH),
-                        TileScreenW,
-                        TileScreenH
-                    );
-
-                    _spriteBatch.Draw(_floorTex, dest, col);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Reads Baker_Spritesheet.json from the given relative path and
-        /// deserialises it into a <see cref="SpritesheetMeta"/> struct.
-        /// The file is plain JSON (not MGCB-processed) and sits in the
-        /// output Content/ folder alongside the compiled texture.
-        /// </summary>
         private static SpritesheetMeta LoadMetadata(string relativePath)
         {
-            // Resolve path relative to the executable directory.
             string basePath = AppDomain.CurrentDomain.BaseDirectory;
             string fullPath = Path.Combine(basePath, relativePath);
 
             if (!File.Exists(fullPath))
                 throw new FileNotFoundException(
                     $"Spritesheet metadata not found at:\n  {fullPath}\n" +
-                    "Make sure Baker_Spritesheet.json is set to 'Copy to Output' " +
-                    "in the Content.mgcb file (as a plain file, not a processed asset).");
+                    "Make sure the JSON file is set to 'Copy to Output' " +
+                    "in the .csproj file.");
 
             string json = File.ReadAllText(fullPath);
-
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var meta    = JsonSerializer.Deserialize<SpritesheetMeta>(json, options);
-            return meta;
+            return JsonSerializer.Deserialize<SpritesheetMeta>(json, options);
         }
 
         // ---------------------------------------------------------------
         // Nested metadata DTO
         // ---------------------------------------------------------------
 
-        /// <summary>
-        /// Plain-old-data type that mirrors the JSON produced by pack_spritesheet.py.
-        /// System.Text.Json deserialises directly into this struct.
-        /// </summary>
         private struct SpritesheetMeta
         {
             public int   FrameWidth      { get; set; }
