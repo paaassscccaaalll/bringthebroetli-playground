@@ -194,9 +194,8 @@ namespace BringTheBrotliDemo
                     if (CurrentJumpHeight <= 0f)
                     {
                         CurrentJumpHeight = 0f;
-                        JumpState = JumpState.Landing;
-                        _landingTimer = LandingDuration;
-                        _anim.SetFrame(5);  // last jump frame = landing
+                        JumpState = JumpState.Grounded;
+                        _anim.SetAnimation(AnimationType.Walk);
                     }
                     else
                     {
