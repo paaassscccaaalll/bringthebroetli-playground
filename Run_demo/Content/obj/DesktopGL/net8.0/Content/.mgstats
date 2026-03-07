@@ -1,5 +1,0 @@
-Source File,Dest File,Processor Type,Content Type,Source File Size,Dest File Size,Build Seconds
-"/home/saentis/bringthebroetli-playground/Run_demo/Content/Baker_Jump_Spritesheet.png","/home/saentis/bringthebroetli-playground/Run_demo/Content/bin/DesktopGL/Content/Baker_Jump_Spritesheet.xnb","TextureProcessor","Texture2DContent",1608114,50331733,1.181395
-"/home/saentis/bringthebroetli-playground/Run_demo/Content/Baker_Walk_Spritesheet.png","/home/saentis/bringthebroetli-playground/Run_demo/Content/bin/DesktopGL/Content/Baker_Walk_Spritesheet.xnb","TextureProcessor","Texture2DContent",5530643,100663381,2.2031233
-"/home/saentis/bringthebroetli-playground/Run_demo/Content/DefaultFont.spritefont","/home/saentis/bringthebroetli-playground/Run_demo/Content/bin/DesktopGL/Content/DefaultFont.xnb","FontDescriptionProcessor","SpriteFontContent",480,37913,0.1256509
-"/home/saentis/bringthebroetli-playground/Run_demo/Content/locomotive.png","/home/saentis/bringthebroetli-playground/Run_demo/Content/bin/DesktopGL/Content/locomotive.xnb","TextureProcessor","Texture2DContent",2864435,11794005,0.4476156
