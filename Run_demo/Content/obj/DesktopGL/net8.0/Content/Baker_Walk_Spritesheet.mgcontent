@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PipelineBuildEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <SourceFile>/home/saentis/bringthebroetli-playground/Run_demo/Content/Baker_Walk_Spritesheet.png</SourceFile>
-  <SourceTime>2026-03-07T17:06:34.2742984+01:00</SourceTime>
+  <SourceTime>2026-03-07T22:28:34.4960263+01:00</SourceTime>
   <DestFile>/home/saentis/bringthebroetli-playground/Run_demo/Content/bin/DesktopGL/Content/Baker_Walk_Spritesheet.xnb</DestFile>
-  <DestTime>2026-03-07T17:06:54.0622715+01:00</DestTime>
+  <DestTime>2026-03-07T22:28:41.5136841+01:00</DestTime>
   <Importer>TextureImporter</Importer>
   <ImporterTime>2025-10-20T16:25:32+02:00</ImporterTime>
   <Processor>TextureProcessor</Processor>

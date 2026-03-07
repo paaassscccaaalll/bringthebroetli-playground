@@ -28,7 +28,7 @@ namespace BringTheBrotliDemo
         public const float DrawScale = 0.2f;
 
         // Jump physics constants
-        public const float JumpVelocity = -10f;  // negative = upward
+        public const float JumpVelocity = -6f;   // negative = upward
         public const float Gravity      = 0.35f;
         public const float MaxFallSpeed = 12f;
 
