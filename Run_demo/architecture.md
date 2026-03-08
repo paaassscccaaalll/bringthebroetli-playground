@@ -9,7 +9,7 @@ Run_demo/
 ├── Game1.cs                         
 ├── Program.cs                       # Entry point
 │
-├── Core/                            # Pure C# — no MonoGame dependencies
+├── Core/                            
 │   ├── GameState.cs                 # All mutable game state
 │   ├── GameRules.cs                 # Continuous physics + instant actions
 │   ├── GamePhase.cs                 # enum: Gameplay, GameOver
@@ -34,9 +34,7 @@ Run_demo/
 │   └── CollisionSystem.cs           # Foot-anchor collision + action zones
 │
 ├── UI/                              # All HUD/UI rendering
-│   ├── HUD.cs                       # 
-│   ├── UIButton.cs                  
-│   └── ResourceDisplay.cs           
+│   ├── HUD.cs                                        
 │
 ├── Rendering/                       # Visual utilities
 │   ├── AnimationController.cs       # 8-directional spritesheet animation
