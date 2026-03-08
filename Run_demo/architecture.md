@@ -279,27 +279,6 @@ baker_bounds.json with the foot anchor. Zero code changes needed.
 
 ---
 
-## Time-Based Progression
-
-The game uses a continuous countdown timer, not discrete rounds.
-Design rationale:
-
-- **TimeRemaining** decreases every frame during Gameplay phase
-- **ProcessTurn** is called when a player clicks "End Turn"
-- **Steam** drives TrainProgress forward during ProcessTurn
-- Timer is paused during Minigame phase
-
-This supports multiple pacing models without architectural changes:
-- Pure real-time: players act freely under time pressure
-- Turn-pressure: players take actions, then trigger ProcessTurn
-- Adjustable: change DefaultTimeLimit or add time bonuses
-
-The Thief's strategy is to waste time or sabotage resources so the
-train doesn't reach Zürich before the timer expires. The Chief must
-efficiently gather resources and convert them to Steam.
-
----
-
 ## Coding Conventions
 
 - **Namespace**: `BringTheBrotliDemo` for all files (folders for organization only)
