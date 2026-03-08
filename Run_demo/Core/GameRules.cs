@@ -11,34 +11,68 @@ namespace BringTheBrotliDemo
 
     public static class GameRules
     {
-        /// <summary>
-        /// Continuous update each frame: train moves based on Steam, time counts down.
-        /// </summary>
-        public static void UpdateContinuous(GameState state, float deltaSeconds)
+        public static void UpdateContinuous(GameState state, float dt)
         {
             if (state.CurrentPhase != GamePhase.Gameplay) return;
 
-            state.TrainProgress += state.Steam * GameConstants.TrainSpeedPerSteam * deltaSeconds;
-            state.TimeRemaining = Math.Max(0f, state.TimeRemaining - deltaSeconds);
+            // Furnace: convert Coal + Water → Steam
+            float toConvert = Math.Min(state.Coal,
+                Math.Min(state.Water, GameConstants.FurnaceConversionRate * dt));
+            state.Coal -= toConvert;
+            state.Water -= toConvert;
+            state.Steam += toConvert;
+
+            // Strike danger: coal in furnace with no water
+            if (state.Coal > 0f && state.Water <= 0f)
+            {
+                state.StrikeDanger += dt;
+                if (state.StrikeDanger >= GameConstants.StrikeDangerThreshold)
+                {
+                    state.Strikes = Math.Min(state.Strikes + 1, GameConstants.MaxStrikes);
+                    state.StrikeDanger = 0f;
+                }
+            }
+            else
+            {
+                state.StrikeDanger = 0f;
+            }
+
+            // Steam drives train
+            float velocity = state.Steam * GameConstants.TrainSpeedPerSteam;
+            state.TrainProgress += velocity * dt;
+
+            // Steam dissipates (cooling)
+            if (state.Steam > 0f)
+                state.Steam = Math.Max(0f, state.Steam - GameConstants.SteamDecayRate * dt);
+
+            // Coal decays slowly
+            if (state.Coal > 0f)
+                state.Coal = Math.Max(0f, state.Coal - GameConstants.CoalDecayRate * dt);
+
+            state.TimeRemaining = Math.Max(0f, state.TimeRemaining - dt);
         }
 
-        /// <summary>
-        /// Manual turn processing (End Turn button for testing):
-        /// 1. Strike check: if Coal > Water, Strikes++ (unsafe boiler pressure)
-        /// 2. Conversion: X = min(C, W), W -= X, S += X (burn fuel into steam)
-        /// </summary>
-        public static void ProcessTurn(GameState state)
+        public static void ProcessBurnCoal(GameState state, int playerIndex)
         {
-            if (state.Coal > state.Water)
-                state.Strikes = Math.Min(state.Strikes + 1, GameConstants.MaxStrikes);
+            var inv = state.Inventories[playerIndex];
+            if (inv.CarriedCoal <= 0) return;
+            state.Coal += inv.CarriedCoal;
+            inv.CarriedCoal = 0;
+        }
 
-            int converted = Math.Min(state.Coal, state.Water);
-            state.Water -= converted;
-            state.Steam += converted;
+        public static void ProcessPourWater(GameState state, int playerIndex)
+        {
+            var inv = state.Inventories[playerIndex];
+            if (inv.CarriedWater <= 0) return;
+            state.Water += inv.CarriedWater;
+            inv.CarriedWater = 0;
         }
 
         public static GameResult CheckWinConditions(GameState state)
         {
+            if (state.Strikes >= GameConstants.MaxStrikes)
+                return GameResult.ThiefWins;
+
             if (state.TrainProgress >= GameConstants.TrainTargetDistance)
                 return GameResult.ChiefWins;
 

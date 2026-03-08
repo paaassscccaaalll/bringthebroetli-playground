@@ -73,9 +73,8 @@ namespace BringTheBrotliDemo
             }
             var registry = new MinigameRegistry();
             registry.Register("load_coal", b => new PlaceholderMinigame("Load Coal", ResourceType.Coal, 2, b));
-            registry.Register("burn_coal", b => new PlaceholderMinigame("Burn Coal", ResourceType.Coal, 2, b));
             registry.Register("load_water", b => new PlaceholderMinigame("Load Water", ResourceType.Water, 2, b));
-            registry.Register("pour_water", b => new PlaceholderMinigame("Pour Water", ResourceType.Water, 2, b));
+            registry.Register("vent_steam", b => new PlaceholderMinigame("Vent Steam", ResourceType.Steam, -3, b));
             _minigameManager = new MinigameManager(registry, _collision);
             _hud = new HUD(_gameState);
             _debugOverlay = new DebugOverlay(_collision);
@@ -97,8 +96,16 @@ namespace BringTheBrotliDemo
                     {
                         player.Update(gameTime, kb, _collision);
                         if (player.InteractPressed && player.CurrentZoneLabel != null)
-                            _minigameManager.TryStartMinigame(
-                                player.PlayerIndex, player.CurrentZoneLabel, _gameState);
+                        {
+                            string zone = player.CurrentZoneLabel;
+                            if (string.Equals(zone, "burn_coal", StringComparison.OrdinalIgnoreCase))
+                                GameRules.ProcessBurnCoal(_gameState, player.PlayerIndex);
+                            else if (string.Equals(zone, "pour_water", StringComparison.OrdinalIgnoreCase))
+                                GameRules.ProcessPourWater(_gameState, player.PlayerIndex);
+                            else
+                                _minigameManager.TryStartMinigame(
+                                    player.PlayerIndex, zone, _gameState);
+                        }
                     }
                 }
                 if (_players[0].JumpState == JumpState.Grounded &&
@@ -110,7 +117,6 @@ namespace BringTheBrotliDemo
                 }
                 _minigameManager.Update(gameTime, _gameState);
                 GameRules.UpdateContinuous(_gameState, dt);
-                _hud.Update(Mouse.GetState());
                 if (GameRules.CheckWinConditions(_gameState) != GameResult.InProgress)
                     _gameState.CurrentPhase = GamePhase.GameOver;
             }

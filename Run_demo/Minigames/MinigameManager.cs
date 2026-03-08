@@ -49,7 +49,7 @@ namespace BringTheBrotliDemo
                 minigame.Update(gameTime);
                 if (minigame.IsComplete)
                 {
-                    ApplyResult(minigame.Result, state);
+                    ApplyResult(minigame.Result, state, playerIndex);
                     completed.Add(playerIndex);
                 }
             }
@@ -63,18 +63,26 @@ namespace BringTheBrotliDemo
                 minigame.Draw(spriteBatch, font, pixel);
         }
 
-        private static void ApplyResult(MinigameResult result, GameState state)
+        private static void ApplyResult(MinigameResult result, GameState state, int playerIndex)
         {
+            var inv = state.Inventories[playerIndex];
             switch (result.ResourceType)
             {
                 case ResourceType.Coal:
-                    state.Coal = Math.Max(0, state.Coal + result.ResourceDelta);
+                    inv.CarriedCoal = Math.Min(
+                        inv.CarriedCoal + result.ResourceDelta,
+                        GameConstants.MaxCarryCapacity);
                     break;
                 case ResourceType.Water:
-                    state.Water = Math.Max(0, state.Water + result.ResourceDelta);
+                    inv.CarriedWater = Math.Min(
+                        inv.CarriedWater + result.ResourceDelta,
+                        GameConstants.MaxCarryCapacity);
                     break;
                 case ResourceType.Steam:
-                    state.Steam = Math.Max(0, state.Steam + result.ResourceDelta);
+                    float prev = state.Steam;
+                    state.Steam = Math.Max(0f, state.Steam + result.ResourceDelta);
+                    if (prev > 0f && state.Steam <= 0f)
+                        state.Strikes = Math.Min(state.Strikes + 1, GameConstants.MaxStrikes);
                     break;
             }
         }

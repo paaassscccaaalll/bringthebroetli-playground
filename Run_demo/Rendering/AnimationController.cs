@@ -151,10 +151,6 @@ namespace BringTheBrotliDemo
             return new Rectangle(x, y, FrameWidth, FrameHeight);
         }
 
-        // ---------------------------------------------------------------
-        // Private helpers
-        // ---------------------------------------------------------------
-
         private static int DirectionToAngle(Vector2 dir)
         {
             double radians = Math.Atan2(-dir.Y, dir.X);

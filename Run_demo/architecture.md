@@ -1,31 +1,25 @@
 # Bring the Brötli — Architecture
 
-## Overview
-
-A 2-player cooperative/social deduction train game built with MonoGame (DesktopGL, .NET 8).
-Two players share a keyboard: one is the Chief (cooperative), one is the Thief (saboteur).
-The train must reach Zürich before time runs out. Steam drives the train forward;
-Coal and Water are converted into Steam each turn.
-
 ---
 
 ## Folder Structure
 
 ```
 Run_demo/
-├── Game1.cs                         # Thin orchestrator (<150 lines)
+├── Game1.cs                         
 ├── Program.cs                       # Entry point
 │
-├── Core/                            # Pure C# — zero MonoGame dependencies
+├── Core/                            # Pure C# — no MonoGame dependencies
 │   ├── GameState.cs                 # All mutable game state
-│   ├── GameRules.cs                 # Turn processing, win conditions
+│   ├── GameRules.cs                 # Continuous physics + instant actions
 │   ├── GamePhase.cs                 # enum: Gameplay, GameOver
-│   ├── GameConstants.cs             # Named constants (no magic numbers)
+│   ├── GameConstants.cs             # Named constants
+│   ├── PlayerInventory.cs           # Per-player carried resources
 │   ├── ResourceType.cs              # enum: Coal, Water, Steam
 │   └── PlayerRole.cs                # enum: Chief, Thief
 │
 ├── Players/                         # Character controllers + input
-│   ├── PlayerCharacter.cs           # Refactored Baker — input-agnostic
+│   ├── PlayerCharacter.cs           # Movement, jump, collision, zone detection
 │   └── PlayerInput.cs               # Key binding configuration
 │
 ├── Minigames/                       # Extensible minigame system
@@ -33,16 +27,16 @@ Run_demo/
 │   ├── MinigameResult.cs            # Result value type
 │   ├── MinigameRegistry.cs          # Zone label → factory map
 │   ├── MinigameManager.cs           # Active minigame lifecycle
-│   └── PlaceholderMinigame.cs       # 2-second placeholder implementation
+│   └── PlaceholderMinigame.cs       # Placeholder minigame implementation
 │
 ├── World/                           # Train + collision
-│   ├── Train.cs                     # Sprite + level-editor JSON loading
-│   └── CollisionSystem.cs           # Foot-anchor polygon collision
+│   ├── Train.cs                     # Sprite + level data loading
+│   └── CollisionSystem.cs           # Foot-anchor collision + action zones
 │
 ├── UI/                              # All HUD/UI rendering
-│   ├── HUD.cs                       # Main HUD orchestrator
-│   ├── UIButton.cs                  # Reusable clickable button
-│   └── ResourceDisplay.cs           # Label + value + adjustment buttons
+│   ├── HUD.cs                       # 
+│   ├── UIButton.cs                  
+│   └── ResourceDisplay.cs           
 │
 ├── Rendering/                       # Visual utilities
 │   ├── AnimationController.cs       # 8-directional spritesheet animation
@@ -66,24 +60,40 @@ Folders are for organization only — no sub-namespaces.
 ## Core Class Responsibilities
 
 ### Game1.cs — Orchestrator
-Thin MonoGame Game subclass under 150 lines. Creates all subsystems in LoadContent.
+Thin MonoGame Game subclass. Creates all subsystems in LoadContent.
 Routes Update/Draw to the correct subsystem based on GamePhase.
 Contains no game logic, no UI logic, no rendering logic beyond delegation.
+Handles the distinction between minigame zones and instant interaction zones:
+- Minigame zones (load_coal, load_water, vent_steam) → MinigameManager
+- Instant zones (burn_coal, pour_water) → GameRules directly
 
 ### Core/GameState.cs — Pure Game State
-Zero MonoGame dependencies. Holds all mutable game state: Coal, Water, Steam, Strikes,
-TimeRemaining, TrainProgress, CurrentPhase. Provides Reset() to return to initial values.
+Float resources (Coal, Water, Steam), Strikes, StrikeDanger accumulator,
+TimeRemaining, TrainProgress, CurrentPhase, and per-player Inventories.
+Provides Reset() to return to initial values.
 Fully unit-testable in isolation without any MonoGame assemblies.
 
 ### Core/GameRules.cs — Pure Game Logic
-Zero MonoGame dependencies. Static methods that operate on GameState:
-ProcessTurn() implements the strike-check → conversion → movement → decay pipeline.
-UpdateTime() decrements the countdown. CheckWinConditions() returns the current GameResult.
+**UpdateContinuous(state, dt)**: Furnace converts Coal+Water → Steam at a rate.
+Strike danger accumulates when coal burns without water.
+Steam drives TrainProgress. Coal and Steam decay over time.
+
+**ProcessBurnCoal(state, playerIndex)**: Instant action. Deposits player's
+carried coal into the train's furnace (global Coal).
+
+**ProcessPourWater(state, playerIndex)**: Instant action. Deposits player's
+carried water into the train's boiler (global Water).
+
+**CheckWinConditions(state)**: Returns GameResult.
+
+### Core/PlayerInventory.cs — Per-Player Resources
+Each player carries Coal and Water independently. Gained from minigames,
+consumed at instant interaction zones. Limited by MaxCarryCapacity.
 
 ### Players/PlayerCharacter.cs — Character Controller
 Refactored from Baker.cs. Takes a PlayerInput configuration instead of hardcoded keys.
 Preserves the exact same jump physics, state machine, and foot-anchor collision system.
-Supports per-player tinting for visual distinction. Tracks InteractPressed for minigame triggers.
+Supports per-player tinting for visual distinction. Tracks InteractPressed for zone triggers.
 
 ### Players/PlayerInput.cs — Input Configuration
 Defines key bindings per player via a simple value class. Static factory properties
@@ -111,18 +121,13 @@ Manages per-player active minigames. Each player can have their own independent
 minigame running simultaneously. On trigger: looks up zone bounds, computes overlay
 position, creates the minigame via MinigameRegistry. While a player is in a minigame,
 their movement is frozen but the other player continues playing normally.
-On completion: applies the MinigameResult to GameState.
+On completion: applies the MinigameResult to the player's inventory (Coal/Water)
+or to global state (Steam for venting). Venting steam to 0 triggers a Strike.
 
 ### Minigames/MinigameRegistry.cs — Factory Map
 Simple dictionary mapping action zone labels to minigame factory functions.
 Uses case-insensitive string comparison. The only place that needs modification
 when adding a new minigame (one line of registration).
-
-### UI/HUD.cs — Heads-Up Display
-Owns all UI rendering. Builds ResourceDisplays for Coal, Water, Steam, and Strikes
-with adjustment buttons. Shows time remaining, train progress, and game phase.
-Provides End Turn and Reset buttons. Draws tooltips above players in action zones.
-Reads GameState and calls GameRules — contains no game logic.
 
 ### Rendering/AnimationController.cs — Spritesheet Animation
 Manages 8-directional walk and jump animation from spritesheets. Handles angle
@@ -162,25 +167,41 @@ public struct MinigameResult
 }
 ```
 
-### GameState (Pure C# — no MonoGame)
+### GameState
 
 ```csharp
 public class GameState
 {
-    public int Coal, Water, Steam, Strikes;
+    public const int PlayerCount = 2;
+    public float Coal, Water, Steam;
+    public int Strikes;
+    public float StrikeDanger;
     public float TimeRemaining, TrainProgress;
     public GamePhase CurrentPhase;
+    public PlayerInventory[] Inventories;
     public void Reset();
 }
 ```
 
-### GameRules (Pure C# — no MonoGame)
+### PlayerInventory (Pure C#)
+
+```csharp
+public class PlayerInventory
+{
+    public int CarriedCoal;
+    public int CarriedWater;
+    public void Reset();
+}
+```
+
+### GameRules
 
 ```csharp
 public static class GameRules
 {
-    public static void UpdateContinuous(GameState state, float deltaSeconds);
-    public static void ProcessTurn(GameState state);
+    public static void UpdateContinuous(GameState state, float dt);
+    public static void ProcessBurnCoal(GameState state, int playerIndex);
+    public static void ProcessPourWater(GameState state, int playerIndex);
     public static GameResult CheckWinConditions(GameState state);
 }
 ```
@@ -277,7 +298,25 @@ takes spritesheet textures as constructor arguments. To add a new
 character skin, provide different walk/jump spritesheets and a new
 baker_bounds.json with the foot anchor. Zero code changes needed.
 
----
+### Steam → Velocity → Progress
+
+```
+Every frame:
+  velocity = Steam * TrainSpeedPerSteam
+  TrainProgress += velocity * dt
+  Steam -= SteamDecayRate * dt  (cooling)
+  Coal -= CoalDecayRate * dt    (decay)
+```
+
+### Action Zone Types
+
+| Zone Label    | Type     | Effect                                |
+|---------------|----------|---------------------------------------|
+| load_coal     | Minigame | Player receives coal in inventory     |
+| load_water    | Minigame | Player receives water in inventory    |
+| vent_steam    | Minigame | Removes steam from train              |
+| burn_coal     | Instant  | Deposits carried coal into furnace    |
+| pour_water    | Instant  | Deposits carried water into boiler    |
 
 ## Coding Conventions
 
