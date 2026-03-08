@@ -2,6 +2,9 @@
 
 A 2.5D MonoGame demo where a Baker character walks, runs, and jumps on a locomotive.
 
+
+S'wichtige isch in Run_demo.
+
 ## Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download)
@@ -56,6 +59,8 @@ All tools are standalone scripts run from the `tools/` directory.
 python pack_spritesheet.py [path/to/Sprites]
 ```
 Expects `Sprites/Walk/Angle_X/` and `Sprites/Jump/Angle_X/` folders. Outputs to `Content/`.
+
+Done via Blender script...
 
 **`level_editor.py`** — Visual editor for locomotive collision data.
 ```bash

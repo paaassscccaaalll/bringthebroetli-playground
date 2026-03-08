@@ -278,5 +278,24 @@ namespace BringTheBrotliDemo
                 Vector2.Dot(p - a, ab) / lenSq, 0f, 1f);
             return a + ab * t;
         }
+
+        /// <summary>
+        /// Push two grounded player positions apart if they overlap within a radius.
+        /// </summary>
+        public static void ResolvePlayerCollision(ref Vector2 posA, ref Vector2 posB, float radius)
+        {
+            Vector2 diff = posB - posA;
+            float distSq = diff.LengthSquared();
+            float minDist = radius * 2f;
+
+            if (distSq >= minDist * minDist || distSq < 0.0001f)
+                return;
+
+            float dist = (float)Math.Sqrt(distSq);
+            float overlap = (minDist - dist) / 2f;
+            Vector2 pushDir = diff / dist;
+            posA -= pushDir * overlap;
+            posB += pushDir * overlap;
+        }
     }
 }
