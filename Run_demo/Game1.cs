@@ -66,16 +66,16 @@ namespace BringTheBrotliDemo
                     _players[i].Tint = new Color(180, 200, 255);
             }
 
-            Vector2? spawn = _train.GetAnchorPoint("spawn");
+            Vector2? spawn = _train.GetAnchorPoint(ZoneLabels.Spawn);
             if (spawn.HasValue)
             {
                 _players[0].Position = spawn.Value;
                 _players[1].Position = spawn.Value + new Vector2(40, 0);
             }
             var registry = new MinigameRegistry();
-            registry.Register("load_coal", b => new PlaceholderMinigame("Load Coal", ResourceType.Coal, 2, b));
-            registry.Register("load_water", b => new PlaceholderMinigame("Load Water", ResourceType.Water, 2, b));
-            registry.Register("vent_steam", b => new PlaceholderMinigame("Vent Steam", ResourceType.Steam, -3, b));
+            registry.Register(ZoneLabels.LoadCoal, b => new PlaceholderMinigame("Load Coal", ResourceType.Coal, 2, b));
+            registry.Register(ZoneLabels.LoadWater, b => new PlaceholderMinigame("Load Water", ResourceType.Water, 2, b));
+            registry.Register(ZoneLabels.VentSteam, b => new PlaceholderMinigame("Vent Steam", ResourceType.Steam, -3, b));
             _minigameManager = new MinigameManager(registry, _collision);
             _hud = new HUD(_gameState);
             _debugOverlay = new DebugOverlay(_collision);
@@ -99,9 +99,9 @@ namespace BringTheBrotliDemo
                         if (player.InteractPressed && player.CurrentZoneLabel != null)
                         {
                             string zone = player.CurrentZoneLabel;
-                            if (string.Equals(zone, "burn_coal", StringComparison.OrdinalIgnoreCase))
+                            if (string.Equals(zone, ZoneLabels.BurnCoal, StringComparison.OrdinalIgnoreCase))
                                 GameRules.ProcessBurnCoal(_gameState, player.PlayerIndex);
-                            else if (string.Equals(zone, "pour_water", StringComparison.OrdinalIgnoreCase))
+                            else if (string.Equals(zone, ZoneLabels.PourWater, StringComparison.OrdinalIgnoreCase))
                                 GameRules.ProcessPourWater(_gameState, player.PlayerIndex);
                             else
                                 _minigameManager.TryStartMinigame(

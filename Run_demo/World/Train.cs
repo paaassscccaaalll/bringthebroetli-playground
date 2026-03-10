@@ -87,19 +87,13 @@ namespace BringTheBrotliDemo
 
             // ---- Load level-editor JSON --------------------------------
             var raw = LoadBoundsJson("Content/locomotive_bounds.json");
-            float ox = drawX;
-            float oy = drawY;
 
             // Surface boundary.
             if (raw.SurfaceBoundary != null)
             {
                 SurfaceBoundary = new Vector2[raw.SurfaceBoundary.Length];
                 for (int i = 0; i < raw.SurfaceBoundary.Length; i++)
-                {
-                    SurfaceBoundary[i] = new Vector2(
-                        raw.SurfaceBoundary[i].X * DrawScale + ox,
-                        raw.SurfaceBoundary[i].Y * DrawScale + oy);
-                }
+                    SurfaceBoundary[i] = ToScreenPoint(raw.SurfaceBoundary[i]);
             }
 
             // Obstacles.
@@ -108,15 +102,10 @@ namespace BringTheBrotliDemo
                 Obstacles = new CollisionSystem.ObstacleRect[raw.Obstacles.Length];
                 for (int i = 0; i < raw.Obstacles.Length; i++)
                 {
-                    var b = raw.Obstacles[i].Bounds;
                     Obstacles[i] = new CollisionSystem.ObstacleRect
                     {
                         Label = raw.Obstacles[i].Label ?? "",
-                        Bounds = new Rectangle(
-                            (int)(b.X * DrawScale + ox),
-                            (int)(b.Y * DrawScale + oy),
-                            (int)(b.Width  * DrawScale),
-                            (int)(b.Height * DrawScale))
+                        Bounds = ToScreenRect(raw.Obstacles[i].Bounds)
                     };
                 }
             }
@@ -127,15 +116,10 @@ namespace BringTheBrotliDemo
                 ActionZones = new CollisionSystem.ActionZone[raw.ActionZones.Length];
                 for (int i = 0; i < raw.ActionZones.Length; i++)
                 {
-                    var b = raw.ActionZones[i].Bounds;
                     ActionZones[i] = new CollisionSystem.ActionZone
                     {
                         Label = raw.ActionZones[i].Label ?? "",
-                        Bounds = new Rectangle(
-                            (int)(b.X * DrawScale + ox),
-                            (int)(b.Y * DrawScale + oy),
-                            (int)(b.Width  * DrawScale),
-                            (int)(b.Height * DrawScale))
+                        Bounds = ToScreenRect(raw.ActionZones[i].Bounds)
                     };
                 }
             }
@@ -146,10 +130,9 @@ namespace BringTheBrotliDemo
                 AnchorPoints = new (string, Vector2)[raw.AnchorPoints.Length];
                 for (int i = 0; i < raw.AnchorPoints.Length; i++)
                 {
-                    var p = raw.AnchorPoints[i].Position;
                     AnchorPoints[i] = (
                         raw.AnchorPoints[i].Label ?? "",
-                        new Vector2(p.X * DrawScale + ox, p.Y * DrawScale + oy));
+                        ToScreenPoint(raw.AnchorPoints[i].Position));
                 }
             }
 
@@ -158,14 +141,7 @@ namespace BringTheBrotliDemo
             {
                 JumpBarriers = new Rectangle[raw.JumpBarriers.Length];
                 for (int i = 0; i < raw.JumpBarriers.Length; i++)
-                {
-                    var b = raw.JumpBarriers[i];
-                    JumpBarriers[i] = new Rectangle(
-                        (int)(b.X * DrawScale + ox),
-                        (int)(b.Y * DrawScale + oy),
-                        (int)(b.Width  * DrawScale),
-                        (int)(b.Height * DrawScale));
-                }
+                    JumpBarriers[i] = ToScreenRect(raw.JumpBarriers[i]);
             }
         }
 
@@ -197,8 +173,20 @@ namespace BringTheBrotliDemo
         }
 
         // ---------------------------------------------------------------
-        // Draw
+        // Coordinate mapping (image-pixel → screen)
         // ---------------------------------------------------------------
+
+        private Vector2 ToScreenPoint(PointData p) =>
+            new Vector2(p.X * DrawScale + DrawPosition.X, p.Y * DrawScale + DrawPosition.Y);
+
+        private Rectangle ToScreenRect(RectData r) =>
+            new Rectangle(
+                (int)(r.X * DrawScale + DrawPosition.X),
+                (int)(r.Y * DrawScale + DrawPosition.Y),
+                (int)(r.Width  * DrawScale),
+                (int)(r.Height * DrawScale));
+
+
 
         public void Draw(SpriteBatch spriteBatch)
         {
