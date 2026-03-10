@@ -55,17 +55,19 @@ namespace BringTheBrotliDemo
         public static void ProcessBurnCoal(GameState state, int playerIndex)
         {
             var inv = state.Inventories[playerIndex];
-            if (inv.CarriedCoal <= 0) return;
-            state.Coal += inv.CarriedCoal;
-            inv.CarriedCoal = 0;
+            int coal = inv.Get(ResourceType.Coal);
+            if (coal <= 0) return;
+            state.Coal += coal;
+            inv.Set(ResourceType.Coal, 0);
         }
 
         public static void ProcessPourWater(GameState state, int playerIndex)
         {
             var inv = state.Inventories[playerIndex];
-            if (inv.CarriedWater <= 0) return;
-            state.Water += inv.CarriedWater;
-            inv.CarriedWater = 0;
+            int water = inv.Get(ResourceType.Water);
+            if (water <= 0) return;
+            state.Water += water;
+            inv.Set(ResourceType.Water, 0);
         }
 
         public static GameResult CheckWinConditions(GameState state)

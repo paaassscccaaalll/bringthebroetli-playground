@@ -44,8 +44,8 @@ namespace BringTheBrotliDemo
             {
                 var inv = _state.Inventories[i];
                 float y = HudY + 60 + i * 25;
-                string label = $"P{i + 1}: Coal {inv.CarriedCoal}/{GameConstants.MaxCarryCapacity}" +
-                               $"  Water {inv.CarriedWater}/{GameConstants.MaxCarryCapacity}";
+                string label = $"P{i + 1}: Coal {inv.Get(ResourceType.Coal)}/{GameConstants.MaxCarryCapacity}" +
+                               $"  Water {inv.Get(ResourceType.Water)}/{GameConstants.MaxCarryCapacity}";
                 Color pColor = i == 0 ? Color.White : new Color(180, 200, 255);
                 sb.DrawString(font, label, new Vector2(20, y), pColor);
             }

@@ -69,13 +69,8 @@ namespace BringTheBrotliDemo
             switch (result.ResourceType)
             {
                 case ResourceType.Coal:
-                    inv.CarriedCoal = Math.Min(
-                        inv.CarriedCoal + result.ResourceDelta,
-                        GameConstants.MaxCarryCapacity);
-                    break;
                 case ResourceType.Water:
-                    inv.CarriedWater = Math.Min(
-                        inv.CarriedWater + result.ResourceDelta,
+                    inv.Add(result.ResourceType, result.ResourceDelta,
                         GameConstants.MaxCarryCapacity);
                     break;
                 case ResourceType.Steam:
