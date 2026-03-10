@@ -10,7 +10,7 @@ namespace BringTheBrotliDemo
 {
     public enum JumpState { Grounded, Rising, Falling, Landing }
 
-    public class PlayerCharacter
+    public class PlayerCharacter : IDepthSortable
     {
         public const float WalkSpeed = 2.5f * 60f;
         public const float RunSpeed = 5.5f * 60f;
@@ -31,6 +31,7 @@ namespace BringTheBrotliDemo
         public Vector2 PredictedLanding { get; private set; }
         public bool InteractPressed { get; private set; }
         public Color Tint { get; set; } = Color.White;
+        public float DepthY => Position.Y;
 
         private readonly AnimationController _anim;
         private readonly PlayerInput _input;

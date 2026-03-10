@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -128,18 +129,22 @@ namespace BringTheBrotliDemo
             GraphicsDevice.Clear(new Color(40, 40, 50));
             _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null);
             _train.Draw(_spriteBatch);
-            foreach (var player in _players)
-                player.Draw(_spriteBatch);
+
+            DepthSorter.DrawSorted(_spriteBatch, _players.Cast<IDepthSortable>());
+
             _hud.DrawTooltips(_spriteBatch, _font, _pixel, _players);
             _hud.Draw(_spriteBatch, _font, _pixel);
             _minigameManager.Draw(_spriteBatch, _font, _pixel);
+
             if (_gameState.Strikes >= GameConstants.MaxStrikes)
                 _spriteBatch.Draw(_pixel,
                     new Rectangle(0, 0, ScreenWidth, ScreenHeight),
                     new Color(255, 0, 0, 40));
+
             if (_debugMode)
                 _debugOverlay.Draw(_spriteBatch, _pixel, _font, _players);
             _spriteBatch.End();
+
             base.Draw(gameTime);
         }
 
