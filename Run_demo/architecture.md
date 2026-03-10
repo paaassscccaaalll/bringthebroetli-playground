@@ -16,7 +16,7 @@ Run_demo/
 │   ├── GameConstants.cs             # Named constants
 │   ├── PlayerInventory.cs           # Per-player carried resources
 │   ├── ResourceType.cs              # enum: Coal, Water, Steam
-│   └── PlayerRole.cs                # enum: Chief, Thief
+│   └── ZoneLabels.cs                # Compile-time zone label constants
 │
 ├── Players/                         # Character controllers + input
 │   ├── PlayerCharacter.cs           # Movement, jump, collision, zone detection
@@ -39,7 +39,9 @@ Run_demo/
 ├── Rendering/                       # Visual utilities
 │   ├── AnimationController.cs       # 8-directional spritesheet animation
 │   ├── DebugOverlay.cs              # F1 debug visualization
-│   └── DrawHelpers.cs               # Pixel/line/rect drawing utilities
+│   ├── DepthSorter.cs               # Painter's algorithm depth sorting
+│   ├── DrawHelpers.cs               # Pixel/line/rect drawing utilities
+│   └── IDepthSortable.cs            # Interface for depth-sorted world objects
 │
 └── Content/                         # Assets
     ├── Content.mgcb
@@ -85,8 +87,9 @@ carried water into the train's boiler (global Water).
 **CheckWinConditions(state)**: Returns GameResult.
 
 ### Core/PlayerInventory.cs — Per-Player Resources
-Each player carries Coal and Water independently. Gained from minigames,
-consumed at instant interaction zones. Limited by MaxCarryCapacity.
+Dictionary-backed inventory keyed by `ResourceType`. Provides `Get(type)`,
+`Set(type, amount)`, and `Add(type, delta, max)`. Automatically supports
+new resource types without adding fields.
 
 ### Players/PlayerCharacter.cs — Character Controller
 Refactored from Baker.cs. Takes a PlayerInput configuration instead of hardcoded keys.
@@ -135,6 +138,17 @@ rectangle computation. Supports direct frame control for jump phases.
 ### Rendering/DebugOverlay.cs — Debug Visualization
 F1-toggle overlay showing collision boundaries, obstacles, jump barriers,
 per-player foot anchors, predicted landing positions, and jump state text.
+
+### Rendering/IDepthSortable.cs + DepthSorter.cs — Depth Sorting
+Interface (`IDepthSortable`) requiring a `DepthY` float and a `Draw` method.
+`DepthSorter.DrawSorted()` sorts any collection of world objects by foot-anchor
+Y position (painter's algorithm) so closer objects draw on top. PlayerCharacter
+implements IDepthSortable; future items/NPCs do the same.
+
+### Core/ZoneLabels.cs — Zone Label Constants
+Static class with `const string` for every action zone and anchor label
+used in the level editor JSON. Eliminates raw string duplication across
+Game1 and minigame registration.
 
 ---
 
@@ -186,8 +200,9 @@ public class GameState
 ```csharp
 public class PlayerInventory
 {
-    public int CarriedCoal;
-    public int CarriedWater;
+    public int Get(ResourceType type);
+    public void Set(ResourceType type, int amount);
+    public void Add(ResourceType type, int delta, int max);
     public void Reset();
 }
 ```
@@ -263,7 +278,7 @@ public class CoalShovelMinigame : IMinigame
 Add one line to the registry setup in `Game1.LoadContent()`:
 
 ```csharp
-registry.Register("load_coal", b => new CoalShovelMinigame(b));
+registry.Register(ZoneLabels.LoadCoal, b => new CoalShovelMinigame(b));
 ```
 
 ### Step 3: Done
